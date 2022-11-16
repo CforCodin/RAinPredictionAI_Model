@@ -1,0 +1,53 @@
+import numpy as np
+import pandas as pd
+from sklearn.impute import SimpleImputer
+from sklearn.preprocessing import LabelEncoder
+from sklearn.preprocessing import StandardScaler
+from sklearn.model_selection import train_test_split
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.metrics import accuracy_score
+
+
+dataset = pd.read_csv("weatherAUS.csv")
+X = dataset.iloc[:,[1,2,3,4,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21]].values
+Y = dataset.iloc[:,-1].values
+Y = Y.reshape(-1,1)  #1D to 2D list using this command
+
+
+imputer = SimpleImputer(missing_values= np.nan, strategy = 'most_frequent')
+X = imputer.fit_transform(X)
+Y = imputer.fit_transform(Y)
+
+
+le1 = LabelEncoder()
+le2 = LabelEncoder()
+le3 = LabelEncoder()
+le4 = LabelEncoder()
+le5 = LabelEncoder()
+le6 = LabelEncoder()
+X[:,0] = le1.fit_transform(X[:,0])
+X[:,4] = le2.fit_transform(X[:,4])
+X[:,6] = le3.fit_transform(X[:,6])
+X[:,7] = le4.fit_transform(X[:,7])
+X[:,-1] = le5.fit_transform(X[:,-1])
+Y = le6.fit_transform(Y)
+
+sc = StandardScaler()
+X = sc.fit_transform(X)
+
+X_train,X_test,Y_train,Y_test = train_test_split(X,Y,test_size=0.2,random_state=0)
+
+classifier = RandomForestClassifier(n_estimators=150,random_state=0)
+classifier.fit(X_train,Y_train)
+classifier.score(X_train,Y_train)
+y_pred = classifier.predict(X_test)
+y_pred = le6.inverse_transform(y_pred)
+Y_test = le6.inverse_transform(Y_test)
+Y_test = Y_test.reshape(-1,1)
+y_pred = y_pred.reshape(-1,1)
+df = np.concatenate((Y_test,y_pred),axis = 1)
+dataframe = pd.DataFrame(df,columns=['Rain on Tommorow','Prediction of Rain'])
+print(dataframe)
+
+accuracy_score(Y_test,y_pred)
+dataframe.to_csv('prediction.csv')
